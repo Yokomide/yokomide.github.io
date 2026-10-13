@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.unison.player",
+    "sha256_cert_fingerprints": ["D4:88:6A:F4:B1:B3:96:60:CD:1A:0B:C3:30:0E:15:2E:B2:A4:15:99:48:E8:C9:26:37:BD:07:88:A8:EB:E4:E8"]
+  }
+}]

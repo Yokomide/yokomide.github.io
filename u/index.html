@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Unison</title>
+<meta name="theme-color" content="#0b0718">
+<style>
+  :root { --bg: #0b0718; --text: #f4efff; --text2: rgba(244,239,255,.65); --accent: #a78bfa; --card: rgba(255,255,255,.06); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { display: flex; justify-content: center; padding: 28px 16px 40px; background:
+    radial-gradient(60vmax 60vmax at 15% 0%, rgba(124,58,237,.35), transparent 60%),
+    radial-gradient(60vmax 60vmax at 100% 100%, rgba(6,182,212,.25), transparent 60%), var(--bg); }
+  main { width: 100%; max-width: 440px; text-align: center; }
+  .logo { font-weight: 800; letter-spacing: .3em; font-size: 13px; color: var(--accent); margin-bottom: 22px; }
+  .cover { width: 100%; aspect-ratio: 1; border-radius: 28px; object-fit: cover; background: var(--card); box-shadow: 0 30px 80px -20px rgba(124,58,237,.6); }
+  h1 { font-size: 26px; margin: 22px 0 4px; line-height: 1.2; }
+  .sub { color: var(--text2); margin: 0 0 22px; }
+  .btn { display: block; width: 100%; padding: 15px 18px; border-radius: 999px; font-weight: 700; font-size: 16px; text-decoration: none; margin: 10px 0; border: 0; }
+  .primary { background: linear-gradient(135deg, #fff, #e4dcff); color: #120d24; }
+  .ghost { background: var(--card); color: var(--text); border: 1px solid rgba(255,255,255,.14); }
+  ol { text-align: left; color: var(--text2); padding-left: 22px; margin: 18px 0; max-height: 40vh; overflow: auto; }
+  li { margin: 4px 0; }
+  .hint { color: var(--text2); font-size: 13px; margin-top: 18px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="logo">UNISON</div>
+  <img class="cover" id="cover" alt="" hidden>
+  <h1 id="title">Unison</h1>
+  <p class="sub" id="sub">Музыкальный плеер: Яндекс Музыка, YouTube и SoundCloud в одном месте.</p>
+  <ol id="list" hidden></ol>
+  <a class="btn primary" id="open" href="#">Открыть в Unison</a>
+  <a class="btn ghost" id="source" hidden></a>
+  <a class="btn ghost" href="Unison.apk" download>Скачать Unison для Android</a>
+  <p class="hint">Если Unison уже установлен, ссылка из Telegram откроется прямо в приложении.</p>
+</main>
+<script>
+(async () => {
+  const hash = location.hash.slice(1);
+  const kind = hash.slice(0, 1), data = hash.slice(2);
+  const $ = (id) => document.getElementById(id);
+  // the app takes the same payload through its own scheme (for when the link opened here instead)
+  $("open").href = "intent://x/" + hash + "#Intent;scheme=unison;package=app.unison.player;end";
+  const b64 = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(s.length / 4) * 4, "=")), (c) => c.charCodeAt(0));
+  const gunzip = async (bytes) => new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
+  const SRC = { yandex: "Яндекс Музыке", youtube: "YouTube Music", soundcloud: "SoundCloud" };
+  const trackUrl = (t) => t.p === "yandex" ? `https://music.yandex.ru/track/${t.i.split(":")[0]}` : t.p === "soundcloud" ? `https://soundcloud.com/${t.i}` : `https://music.youtube.com/watch?v=${t.i}`;
+  try {
+    if (!hash) return;
+    const json = JSON.parse(await gunzip(b64(data)));
+    if (kind === "t") {
+      const t = json;
+      document.title = `${t.t} — ${(t.a || "").split("\u001F").join(", ")}`;
+      $("title").textContent = t.t; $("sub").textContent = (t.a || "").split("\u001F").join(", ");
+      if (t.w) { $("cover").src = t.w; $("cover").hidden = false; }
+      $("source").href = trackUrl(t); $("source").textContent = `Слушать в ${SRC[t.p] || "источнике"}`; $("source").hidden = false;
+    } else if (kind === "c") {
+      $("title").textContent = json.t; $("sub").textContent = json.s || "";
+      if (json.w) { $("cover").src = json.w; $("cover").hidden = false; }
+      if (json.u) { $("source").href = json.u; $("source").textContent = `Открыть в ${SRC[json.p] || "источнике"}`; $("source").hidden = false; }
+    } else if (kind === "p") {
+      $("title").textContent = json.n; $("sub").textContent = `Плейлист Unison · ${json.t.length}`;
+      const first = json.t.find((t) => t.w); if (first) { $("cover").src = first.w; $("cover").hidden = false; }
+      const ol = $("list"); ol.hidden = false;
+      json.t.slice(0, 50).forEach((t) => { const li = document.createElement("li"); li.textContent = `${t.t} — ${(t.a || "").split("\u001F").join(", ")}`; ol.appendChild(li); });
+    }
+  } catch (e) { /* an old or broken link: the page still offers the app */ }
+})();
+</script>
+</body>
+</html>
