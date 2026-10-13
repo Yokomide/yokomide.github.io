@@ -8,6 +8,7 @@
 <style>
   :root { --bg: #0b0718; --text: #f4efff; --text2: rgba(244,239,255,.65); --accent: #a78bfa; --card: rgba(255,255,255,.06); }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   body { display: flex; justify-content: center; padding: 28px 16px 40px; background:
     radial-gradient(60vmax 60vmax at 15% 0%, rgba(124,58,237,.35), transparent 60%),
@@ -38,6 +39,7 @@
   <p class="hint">Если Unison уже установлен, ссылка из Telegram откроется прямо в приложении.</p>
 </main>
 <script>
+window.addEventListener("hashchange", () => location.reload());
 (async () => {
   const hash = location.hash.slice(1);
   const kind = hash.slice(0, 1), data = hash.slice(2);
